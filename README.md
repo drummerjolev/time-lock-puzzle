@@ -6,7 +6,7 @@
 
 🐍 Python 3.7
 
-I recommend using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/). For setting up a new environment: `mkvirtualenv -p $(which python3)`.
+I recommend using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/). For setting up a new environment: `mkvirtualenv -p $(which python3) {YOUR_ENV_NAME}`.
 
 ## Installing
 
