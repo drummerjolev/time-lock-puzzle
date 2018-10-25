@@ -7,7 +7,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-def fast_exponentiation(n: int, g: int, x: int):
+def fast_exponentiation(n: int, g: int, x: int) -> int:
     # reverses binary string
     binary = bin(x)[2:][::-1]
     squares = successive_squares(g, n, len(binary))
@@ -17,7 +17,7 @@ def fast_exponentiation(n: int, g: int, x: int):
     return functools.reduce(lambda a, b: a * b % n, factors)
 
 
-def successive_squares(base, mod, length):
+def successive_squares(base: int, mod: int, length: int) -> [int]:
     table = [base % mod]
     prev = base % mod
     for n in range(1, length):
@@ -27,7 +27,8 @@ def successive_squares(base, mod, length):
     return table
 
 
-def encrypt(t, s):
+# TODO: move to class
+def encrypt(t: int, s: int):
     if not t or not s:
         # TODO: custom error handling
         raise AssertionError
@@ -41,8 +42,7 @@ def encrypt(t, s):
         backend=default_backend()
     )
 
-    # might be unnecessary
-    # TODO: remove?
+    # used to compute phi_n
     p, q = private_key.private_numbers().p, private_key.private_numbers().q
 
     # save for later
@@ -63,7 +63,7 @@ def encrypt(t, s):
     # Encrypt key
     # Hardness assumption: factoring phi_n
     phi_n = (p - 1) * (q - 1)
-    e = fast_exponentiation(phi_n, 2, t)
+    e = fast_exponentiation(phi_n, 2, t * s)
     b = fast_exponentiation(n, a, e)
 
     encrypted_key = (key_int % n + b) % n
@@ -77,5 +77,10 @@ def decrypt(t, n):
 
 
 if __name__ == '__main__':
-    res = encrypt(42380292, 3)
+    if len(sys.argv) != 3:
+        print('Please provide t, s')
+    arg_t, arg_s = sys.argv[1], sys.argv[2]
+    print("t =", arg_t)
+    print("s =", arg_s)
+    res = encrypt(int(arg_t), int(arg_s))
     print(res)
