@@ -1,35 +1,17 @@
-import functools
 import os
 import sys
+import time
+
+from timelockpuzzle.algorithms.fast_exponentiation import fast_exponentiation
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-def fast_exponentiation(n: int, g: int, x: int) -> int:
-    # reverses binary string
-    binary = bin(x)[2:][::-1]
-    squares = successive_squares(g, n, len(binary))
-    # keeps positive powers of two
-    factors = [tup[1] for tup in zip(binary, squares) if tup[0] == '1']
-    # TODO: replace with for-loop
-    return functools.reduce(lambda a, b: a * b % n, factors)
-
-
-def successive_squares(base: int, mod: int, length: int) -> [int]:
-    table = [base % mod]
-    prev = base % mod
-    for n in range(1, length):
-        squared = prev**2 % mod
-        table.append(squared)
-        prev = squared
-    return table
-
-
 # TODO: move to class
-def encrypt(t: int, s: int):
-    if not t or not s:
+def encrypt(seconds: int, squarings_per_second: int):
+    if not seconds or not squarings_per_second:
         # TODO: custom error handling
         raise AssertionError
 
@@ -49,7 +31,7 @@ def encrypt(t: int, s: int):
     n = private_key.public_key().public_numbers().n
 
     # encrypt vote
-    # TODO: use AES?
+    # Fernet is an asymmetric encryption protocol using AES
     key = Fernet.generate_key()
     key_int = int.from_bytes(key, sys.byteorder)
 
@@ -63,17 +45,33 @@ def encrypt(t: int, s: int):
     # Encrypt key
     # Hardness assumption: factoring phi_n
     phi_n = (p - 1) * (q - 1)
-    e = fast_exponentiation(phi_n, 2, t * s)
+    t = seconds * squarings_per_second
+    e = 2**t % phi_n
     b = fast_exponentiation(n, a, e)
 
     encrypted_key = (key_int % n + b) % n
-    return n, a, t, encrypted_key, encrypted_message
+    # TODO: Ecleasia has ballot casting phase. Keep everything.
+    # TODO: ballot opening phase: honest actors send p, q
+
+    # TODO: what is standard way to build a commitment scheme on top of an encryption algorithm?
+    # TODO: e.g. one time pad does NOT give you that guarantee
+
+    # TODO: write it down
+    return n, a, t, encrypted_key, encrypted_message, key_int
 
 
-def decrypt(t, n):
-    # TODO: use successive_squares
-    # TODO: add timing?
-    pass
+def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int):
+    before = time.time()
+    b = a % n
+    for i in range(t):
+        b = b**2 % n
+    print('It took:', time.time() - before)
+    dec_key = (enc_key - b) % n
+
+    # TODO: bytelength is hard coded. Move to class?
+    key_bytes = int.to_bytes(dec_key, length=64, byteorder=sys.byteorder)
+    cipher_suite = Fernet(key_bytes)
+    return cipher_suite.decrypt(enc_message)
 
 
 if __name__ == '__main__':
@@ -82,5 +80,10 @@ if __name__ == '__main__':
     arg_t, arg_s = sys.argv[1], sys.argv[2]
     print("t =", arg_t)
     print("s =", arg_s)
-    res = encrypt(int(arg_t), int(arg_s))
-    print(res)
+    # TODO: function for time counting
+    n, a, t, encrypted_key, encrypted_message, original_key = encrypt(int(arg_t), int(arg_s))
+
+    print('Decrypting')
+    # decrypt
+    dec_msg = decrypt(n, a, t, encrypted_key, encrypted_message)
+    print(dec_msg)
