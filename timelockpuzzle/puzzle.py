@@ -1,5 +1,6 @@
 import os
 import sys
+import timeit
 
 from timelockpuzzle.algorithms.fast_exponentiation import fast_exponentiation
 
@@ -8,7 +9,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-# TODO: move to class
 def encrypt(message: bytes, seconds: int, squarings_per_second: int):
     if not seconds or not squarings_per_second:
         raise AssertionError
@@ -46,7 +46,7 @@ def encrypt(message: bytes, seconds: int, squarings_per_second: int):
     return n, a, t, encrypted_key, encrypted_message, key_int
 
 
-def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int):
+def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int) -> bytes:
     # Successive squaring to find b
     # We assume this cannot be parallelized
     b = a % n
@@ -61,12 +61,26 @@ def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
+    # We use the main function to time the accuracy of the decrypt function
+    # Import the methods to use as-is
+    if len(sys.argv) != 4:
         print('Please provide t, s')
-    arg_t, arg_s = sys.argv[1], sys.argv[2]
+    arg_t, arg_s, arg_repeats = sys.argv[1], sys.argv[2], sys.argv[3]
     print("t =", arg_t)
     print("s =", arg_s)
-    n, a, t, encrypted_key, encrypted_message, original_key = encrypt(b"This is a vote for Myrto", int(arg_t), int(arg_s))
+
+    n, a, t, encrypted_key, encrypted_message, original_key = encrypt(
+        b"This is a vote for Myrto",
+        int(arg_t),
+        int(arg_s)
+    )
+
     print('Decrypting')
-    dec_msg = decrypt(n, a, t, encrypted_key, encrypted_message)
-    print(dec_msg)
+    # time it provides an accurate timing function with disabled garbage collecting
+    # https://docs.python.org/3/library/timeit.html
+    print(timeit.repeat(
+        'print(decrypt(n, a, t, encrypted_key, encrypted_message))',
+        globals=globals(),
+        repeat=int(arg_repeats),
+        number=1)
+    )
