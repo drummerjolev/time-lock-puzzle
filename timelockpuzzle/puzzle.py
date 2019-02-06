@@ -11,12 +11,13 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 # TODO: move to class
 def encrypt(seconds: int, squarings_per_second: int):
+    # TODO: find safe seconds to use
     if not seconds or not squarings_per_second:
         # TODO: custom error handling
         raise AssertionError
 
     # message contains vote info
-    message = b"This is a vote for John Doe"
+    message = b"This is a vote for Myrto"
 
     private_key = rsa.generate_private_key(
         public_exponent=65537,
@@ -32,6 +33,8 @@ def encrypt(seconds: int, squarings_per_second: int):
 
     # encrypt vote
     # Fernet is an asymmetric encryption protocol using AES
+    # TODO: this key is probably unsafe.
+    # TODO: Fernet uses AES under the hood. Maybe use directly?
     key = Fernet.generate_key()
     key_int = int.from_bytes(key, sys.byteorder)
 
@@ -50,13 +53,6 @@ def encrypt(seconds: int, squarings_per_second: int):
     b = fast_exponentiation(n, a, e)
 
     encrypted_key = (key_int % n + b) % n
-    # TODO: Ecleasia has ballot casting phase. Keep everything.
-    # TODO: ballot opening phase: honest actors send p, q
-
-    # TODO: what is standard way to build a commitment scheme on top of an encryption algorithm?
-    # TODO: e.g. one time pad does NOT give you that guarantee
-
-    # TODO: write it down
     return n, a, t, encrypted_key, encrypted_message, key_int
 
 
@@ -68,7 +64,6 @@ def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int):
     print('It took:', time.time() - before)
     dec_key = (enc_key - b) % n
 
-    # TODO: bytelength is hard coded. Move to class?
     key_bytes = int.to_bytes(dec_key, length=64, byteorder=sys.byteorder)
     cipher_suite = Fernet(key_bytes)
     return cipher_suite.decrypt(enc_message)
@@ -82,7 +77,6 @@ if __name__ == '__main__':
     print("s =", arg_s)
     # TODO: function for time counting
     n, a, t, encrypted_key, encrypted_message, original_key = encrypt(int(arg_t), int(arg_s))
-
     print('Decrypting')
     # decrypt
     dec_msg = decrypt(n, a, t, encrypted_key, encrypted_message)
