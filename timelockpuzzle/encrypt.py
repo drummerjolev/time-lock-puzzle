@@ -17,6 +17,6 @@ if __name__ == '__main__':
         int(arg_t),
         int(arg_s)
     )
-    print([p, q, n, a, t, encrypted_key, encrypted_message.decode(), key_int])
+    print(p, q, n, a, t, encrypted_key, encrypted_message.decode(), key_int)
     sys.stdout.flush()
 
