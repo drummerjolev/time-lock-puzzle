@@ -1,6 +1,11 @@
+import os
 import sys
 
+# line required to run as script (without -m option)
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from timelockpuzzle.puzzle import encrypt
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 4:
