@@ -43,7 +43,7 @@ def encrypt(message: bytes, seconds: int, squarings_per_second: int):
     b = fast_exponentiation(n, a, e)
 
     encrypted_key = (key_int % n + b) % n
-    return n, a, t, encrypted_key, encrypted_message, key_int
+    return p, q, n, a, t, encrypted_key, encrypted_message, key_int
 
 
 def decrypt(n: int, a: int, t: int, enc_key: int, enc_message: int) -> bytes:
@@ -69,13 +69,14 @@ if __name__ == '__main__':
     print("t =", arg_t)
     print("s =", arg_s)
 
-    n, a, t, encrypted_key, encrypted_message, original_key = encrypt(
-        b"This is a vote for Myrto",
+    p, q, n, a, t, encrypted_key, encrypted_message, original_key = encrypt(
+        "This is a vote for Myrto".encode(),
         int(arg_t),
         int(arg_s)
     )
 
     print('Decrypting')
+    # TODO: make separate script for measuring this
     # time it provides an accurate timing function with disabled garbage collecting
     # https://docs.python.org/3/library/timeit.html
     print(timeit.repeat(

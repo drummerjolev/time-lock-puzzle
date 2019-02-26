@@ -19,7 +19,7 @@ All three arguments are `int`s and all are required.
 
 ## Production
 
-DO NOT USE IN PRODUCTION. This code is very experimental and is part of a bigger project which will be linked here soon.
+🛑 DO NOT USE IN PRODUCTION ✋. This code is very experimental and is part of a bigger project which will be linked here soon.
 Security is not guaranteed, assume it is unsafe.
 In the meantime, feel free to play around. PRs are very welcome. 
 
